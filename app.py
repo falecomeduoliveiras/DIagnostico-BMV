@@ -1,4 +1,4 @@
-# app.py
+# app.py (Corrigido)
 import streamlit as st
 import plotly.graph_objects as go
 import urllib.parse
@@ -230,7 +230,7 @@ def show_welcome_page():
     """)
     if st.button("🚀 Começar Diagnóstico"):
         st.session_state.page = 'quiz'
-        st.experimental_rerun()
+        st.rerun()
 
 def show_quiz_page():
     category = st.session_state.category
@@ -239,7 +239,7 @@ def show_quiz_page():
 
     st.header(f"Etapa: {category.capitalize()}")
     
-    progress_value = (q_index + 1) / len(questions)
+    progress_value = (q_index) / len(questions)
     st.progress(progress_value)
     st.markdown(f"Pergunta {q_index + 1} de {len(questions)}")
 
@@ -248,28 +248,28 @@ def show_quiz_page():
 
     options = [opt['text'] for opt in question_data['options']]
     
-    # Usar um formulário para agrupar o radio e o botão
     with st.form(key=f"quiz_form_{category}_{q_index}"):
-        user_choice = st.radio("Escolha uma opção:", options, key=f"radio_{category}_{q_index}")
+        user_choice = st.radio("Escolha uma opção:", options, key=f"radio_{category}_{q_index}", index=None)
         submitted = st.form_submit_button("Avançar")
 
         if submitted:
-            # Encontrar o score correspondente à escolha
-            selected_score = [opt['score'] for opt in question_data['options'] if opt['text'] == user_choice][0]
-            st.session_state.answers[f"{category}-{q_index}"] = selected_score
-
-            if q_index + 1 < len(questions):
-                st.session_state.current_question += 1
+            if user_choice is None:
+                st.warning("Por favor, selecione uma opção para continuar.")
             else:
-                # Passar para a próxima categoria
-                categories = list(DIAGNOSTIC_QUESTIONS.keys())
-                current_cat_index = categories.index(category)
-                if current_cat_index + 1 < len(categories):
-                    st.session_state.category = categories[current_cat_index + 1]
-                    st.session_state.current_question = 0
+                selected_score = [opt['score'] for opt in question_data['options'] if opt['text'] == user_choice][0]
+                st.session_state.answers[f"{category}-{q_index}"] = selected_score
+
+                if q_index + 1 < len(questions):
+                    st.session_state.current_question += 1
                 else:
-                    st.session_state.page = 'results'
-            st.experimental_rerun()
+                    categories = list(DIAGNOSTIC_QUESTIONS.keys())
+                    current_cat_index = categories.index(category)
+                    if current_cat_index + 1 < len(categories):
+                        st.session_state.category = categories[current_cat_index + 1]
+                        st.session_state.current_question = 0
+                    else:
+                        st.session_state.page = 'results'
+                st.rerun()
 
 
 def show_results_page():
@@ -353,7 +353,7 @@ def show_results_page():
                     </div>
                     """
                     st.markdown(link_markdown, unsafe_allow_html=True)
-                    st.session_state.show_form = False # Oculta o formulário após gerar o link
+                    st.session_state.show_form = False
                 else:
                     st.error("Por favor, preencha seu nome e WhatsApp.")
 
