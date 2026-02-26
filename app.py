@@ -1,4 +1,4 @@
-# app.py (Versão com Ferramenta de Diagnóstico)
+# app.py (Versão com Correção da Chave Privada)
 import streamlit as st
 import plotly.graph_objects as go
 import urllib.parse
@@ -13,50 +13,21 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- FERRAMENTA DE DIAGNÓSTICO DA CONEXÃO ---
+# --- CONEXÃO COM GOOGLE SHEETS (COM CORREÇÃO DA CHAVE) ---
 def connect_to_gsheets():
-    """Tenta conectar com o Google Sheets e mostra informações de debug na tela."""
-    st.subheader("Status da Conexão com a Planilha (Debug)")
     try:
-        # 1. Verificar se o segredo existe no Streamlit
-        if "gcp_service_account" not in st.secrets:
-            st.error("ERRO: O segredo 'gcp_service_account' não foi encontrado.")
-            st.info("Verifique se você salvou o segredo no painel do Streamlit com o nome/chave exatamente igual a `gcp_service_account`.")
-            return None
-
-        st.success("✅ PASSO 1: Segredo 'gcp_service_account' encontrado.")
+        creds_dict = st.secrets["gcp_service_account"]
         
-        creds = st.secrets["gcp_service_account"]
-
-        # 2. Verificar se as chaves essenciais estão no segredo (sinal de que o TOML foi bem formatado)
-        required_keys = ["project_id", "private_key", "client_email"]
-        if not all(key in creds for key in required_keys):
-            st.error("ERRO: O formato do segredo (TOML) parece incorreto.")
-            st.info(f"O Streamlit encontrou as seguintes chaves no seu segredo: {list(creds.keys())}")
-            st.warning("Compare com as chaves esperadas. O erro mais comum é na formatação da 'private_key', que precisa estar entre aspas triplas.")
-            return None
-            
-        st.success("✅ PASSO 2: Formato do segredo (TOML) parece correto.")
-        st.write(f"**Project ID Lido:** `{creds.get('project_id')}`")
-        st.write(f"**E-mail do Robô Lido:** `{creds.get('client_email')}`")
-
-        # 3. Tentar autenticar e abrir a planilha
-        st.write("Tentando autenticar com as credenciais...")
-        sa = gspread.service_account_from_dict(creds)
-        st.success("✅ PASSO 3: Autenticação com o Google bem-sucedida.")
+        # **A CORREÇÃO ESTÁ AQUI**
+        # Garante que a chave privada tenha as quebras de linha corretas
+        creds_dict['private_key'] = creds_dict['private_key'].replace('\\n', '\n')
         
-        st.write("Tentando abrir a planilha 'Relatório de Visitas - Diagnóstico'...")
+        sa = gspread.service_account_from_dict(creds_dict)
         sh = sa.open("Relatório de Visitas - Diagnóstico")
-        st.success("✅ PASSO 4: Planilha encontrada e aberta com sucesso!")
-        
-        st.info("🎉 A conexão está funcionando perfeitamente!")
-        st.markdown("---")
         return sh.sheet1
-
     except Exception as e:
-        st.error("Ocorreu um erro inesperado durante a conexão:")
-        st.exception(e)
-        st.markdown("---")
+        st.error("A conexão com a planilha falhou. Verifique os passos de configuração.")
+        st.exception(e) # Mostra o erro detalhado para debug
         return None
 
 # --- DADOS DO DIAGNÓSTICO (sem alterações) ---
@@ -250,13 +221,13 @@ st.markdown("---")
 # --- PÁGINAS DA APLICAÇÃO ---
 def show_welcome_page():
     worksheet = connect_to_gsheets()
-    log_visit(worksheet)
-    
-    st.title("Diagnóstico de Maturidade Digital")
-    st.markdown("Descubra o nível de maturidade digital do seu negócio em **Branding, Marketing e Vendas**.")
-    if st.button("🚀 Começar Diagnóstico"):
-        st.session_state.page = 'quiz'
-        st.rerun()
+    if worksheet:
+        log_visit(worksheet)
+        st.title("Diagnóstico de Maturidade Digital")
+        st.markdown("Descubra o nível de maturidade digital do seu negócio em **Branding, Marketing e Vendas**.")
+        if st.button("🚀 Começar Diagnóstico"):
+            st.session_state.page = 'quiz'
+            st.rerun()
 
 def show_quiz_page():
     category = st.session_state.category
