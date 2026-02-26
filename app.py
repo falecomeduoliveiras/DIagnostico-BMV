@@ -1,4 +1,4 @@
-# app.py (Solução com Segredos Individuais)
+# app.py (Versão Final - À Prova de Erros de Formato)
 import streamlit as st
 import plotly.graph_objects as go
 import urllib.parse
@@ -13,15 +13,16 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- CONEXÃO COM GOOGLE SHEETS (MÉTODO À PROVA DE ERROS) ---
+# --- CONEXÃO COM GOOGLE SHEETS (MÉTODO FINAL) ---
 def connect_to_gsheets():
     try:
-        # Remonta o dicionário de credenciais a partir de segredos individuais
+        # Remonta o dicionário de credenciais a partir de segredos individuais.
+        # Este método é mais robusto contra erros de formatação TOML.
         creds = {
             "type": st.secrets["type"],
             "project_id": st.secrets["project_id"],
             "private_key_id": st.secrets["private_key_id"],
-            "private_key": st.secrets["private_key"],
+            "private_key": st.secrets["private_key"], # O novo formato TOML cuida das quebras de linha
             "client_email": st.secrets["client_email"],
             "client_id": st.secrets["client_id"],
             "auth_uri": st.secrets["auth_uri"],
@@ -34,7 +35,7 @@ def connect_to_gsheets():
         sh = sa.open("Relatório de Visitas - Diagnóstico")
         return sh.sheet1
     except Exception as e:
-        st.error("A conexão com a planilha falhou. Verifique a configuração dos segredos individuais.")
+        st.error("A conexão com a planilha falhou. Verifique se todos os 10 segredos foram copiados corretamente.")
         st.exception(e)
         return None
 
