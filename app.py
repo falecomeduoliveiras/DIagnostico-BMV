@@ -1,4 +1,4 @@
-# app.py (Correção Final do TypeError)
+# app.py (Solução com Segredos Individuais)
 import streamlit as st
 import plotly.graph_objects as go
 import urllib.parse
@@ -13,23 +13,29 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- CONEXÃO COM GOOGLE SHEETS (COM CORREÇÃO FINAL) ---
+# --- CONEXÃO COM GOOGLE SHEETS (MÉTODO À PROVA DE ERROS) ---
 def connect_to_gsheets():
     try:
-        # **A CORREÇÃO ESTÁ AQUI**
-        # 1. Faz uma cópia do segredo para uma variável que podemos editar.
-        creds_dict = dict(st.secrets["gcp_service_account"])
+        # Remonta o dicionário de credenciais a partir de segredos individuais
+        creds = {
+            "type": st.secrets["type"],
+            "project_id": st.secrets["project_id"],
+            "private_key_id": st.secrets["private_key_id"],
+            "private_key": st.secrets["private_key"],
+            "client_email": st.secrets["client_email"],
+            "client_id": st.secrets["client_id"],
+            "auth_uri": st.secrets["auth_uri"],
+            "token_uri": st.secrets["token_uri"],
+            "auth_provider_x509_cert_url": st.secrets["auth_provider_x509_cert_url"],
+            "client_x509_cert_url": st.secrets["client_x509_cert_url"]
+        }
         
-        # 2. Garante que a chave privada tenha as quebras de linha corretas na cópia.
-        creds_dict['private_key'] = creds_dict['private_key'].replace('\\n', '\n')
-        
-        # 3. Usa a cópia corrigida para autenticar.
-        sa = gspread.service_account_from_dict(creds_dict)
+        sa = gspread.service_account_from_dict(creds)
         sh = sa.open("Relatório de Visitas - Diagnóstico")
         return sh.sheet1
     except Exception as e:
-        st.error("A conexão com a planilha falhou. Verifique os passos de configuração.")
-        st.exception(e) # Mostra o erro detalhado para debug
+        st.error("A conexão com a planilha falhou. Verifique a configuração dos segredos individuais.")
+        st.exception(e)
         return None
 
 # --- DADOS DO DIAGNÓSTICO (sem alterações) ---
