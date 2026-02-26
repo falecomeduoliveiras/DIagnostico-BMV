@@ -1,4 +1,4 @@
-# app.py (Versão Final - À Prova de Erros de Formato)
+# app.py (Versão com Ajustes de UX, Design e Captura de Leads)
 import streamlit as st
 import plotly.graph_objects as go
 import urllib.parse
@@ -6,23 +6,32 @@ import gspread
 from datetime import datetime
 import pandas as pd
 
-# --- CONFIGURAÇÃO DA PÁGINA ---
+# --- CONFIGURAÇÃO DA PÁGINA E ESTILOS GLOBAIS ---
 st.set_page_config(
     page_title="Diagnóstico de Maturidade Digital",
     page_icon="🚀",
     layout="centered"
 )
 
-# --- CONEXÃO COM GOOGLE SHEETS (MÉTODO FINAL) ---
+# 3. Injeta CSS customizado para usar a fonte Poppins em todo o app
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+html, body, [class*="st-"], .st-emotion-cache-10trblm, .st-emotion-cache-1kyxreq {
+    font-family: 'Poppins', sans-serif;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+# --- CONEXÃO COM GOOGLE SHEETS ---
 def connect_to_gsheets():
     try:
-        # Remonta o dicionário de credenciais a partir de segredos individuais.
-        # Este método é mais robusto contra erros de formatação TOML.
         creds = {
             "type": st.secrets["type"],
             "project_id": st.secrets["project_id"],
             "private_key_id": st.secrets["private_key_id"],
-            "private_key": st.secrets["private_key"], # O novo formato TOML cuida das quebras de linha
+            "private_key": st.secrets["private_key"],
             "client_email": st.secrets["client_email"],
             "client_id": st.secrets["client_id"],
             "auth_uri": st.secrets["auth_uri"],
@@ -30,12 +39,11 @@ def connect_to_gsheets():
             "auth_provider_x509_cert_url": st.secrets["auth_provider_x509_cert_url"],
             "client_x509_cert_url": st.secrets["client_x509_cert_url"]
         }
-        
         sa = gspread.service_account_from_dict(creds)
         sh = sa.open("Relatório de Visitas - Diagnóstico")
         return sh.sheet1
     except Exception as e:
-        st.error("A conexão com a planilha falhou. Verifique se todos os 10 segredos foram copiados corretamente.")
+        st.error("A conexão com a planilha falhou. Verifique a configuração dos segredos.")
         st.exception(e)
         return None
 
@@ -181,13 +189,14 @@ def log_visit(worksheet):
     if worksheet and not st.session_state.get('visit_logged', False):
         try:
             session_id = st.runtime.scriptrunner.get_script_run_ctx().session_id
-            new_row = [session_id, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "", ""]
+            # Adiciona uma 5ª coluna vazia para o futuro telefone
+            new_row = [session_id, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "", "", ""]
             worksheet.append_row(new_row)
             st.session_state.visit_logged = True
         except Exception as e:
             print(f"Erro ao registrar visita: {e}")
 
-def log_completion(worksheet, user_name):
+def log_completion(worksheet, user_name, user_phone):
     if worksheet:
         try:
             session_id = st.runtime.scriptrunner.get_script_run_ctx().session_id
@@ -195,19 +204,21 @@ def log_completion(worksheet, user_name):
             if cell:
                 worksheet.update_cell(cell.row, 3, user_name)
                 worksheet.update_cell(cell.row, 4, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                # Salva o telefone na 5ª coluna
+                worksheet.update_cell(cell.row, 5, user_phone)
         except Exception as e:
             print(f"Erro ao registrar preenchimento: {e}")
 
 # --- FUNÇÕES DE GRÁFICOS ---
 def create_gauge_chart(score, title):
-    if score <= 30: color = "#EF4444"
-    elif score <= 70: color = "#F59E0B"
-    else: color = "#22C55E"
+    if score <= 35: color = "#DC2626" # Vermelho mais forte
+    elif score <= 70: color = "#FBBF24" # Amarelo
+    else: color = "#16A34A" # Verde mais escuro
     fig = go.Figure(go.Indicator(
         mode="gauge+number", value=score, title={'text': title, 'font': {'size': 20}},
         number={'suffix': "%", 'font': {'size': 28}},
         gauge={'axis': {'range': [None, 100]}, 'bar': {'color': color},
-               'steps': [{'range': [0, 30], 'color': '#FECACA'}, {'range': [30, 70], 'color': '#FDE68A'}, {'range': [70, 100], 'color': '#A7F3D0'}]}))
+               'steps': [{'range': [0, 35], 'color': '#FECACA'}, {'range': [35, 70], 'color': '#FDE68A'}, {'range': [70, 100], 'color': '#A7F3D0'}]}))
     fig.update_layout(height=250, margin=dict(l=10, r=10, t=50, b=10))
     return fig
 
@@ -223,8 +234,8 @@ def create_radar_chart(data):
     return fig
 
 # --- HEADER ---
-st.markdown("<h1 style='text-align: center; color: #00A9FF;'>woow</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; opacity: 0.8;'>MARKETING 360º</p>", unsafe_allow_html=True)
+# 1. Adiciona o logo da empresa no topo
+st.image("https://i.imgur.com/gL4g5dC.png", width=200) # URL de um logo genérico "Sua Logo Aqui"
 st.markdown("---")
 
 # --- PÁGINAS DA APLICAÇÃO ---
@@ -247,7 +258,10 @@ def show_quiz_page():
     st.progress(progress_value)
     st.markdown(f"Pergunta {q_index + 1} de {len(questions)}")
     question_data = questions[q_index]
-    st.subheader(question_data['question'])
+    
+    # 2. Aumenta o tamanho da fonte da pergunta
+    st.markdown(f"<h2 style='font-size: 22px; font-weight: 600;'>{question_data['question']}</h2>", unsafe_allow_html=True)
+    
     options = [opt['text'] for opt in question_data['options']]
     with st.form(key=f"quiz_form_{category}_{q_index}"):
         user_choice = st.radio("Escolha uma opção:", options, key=f"radio_{category}_{q_index}", index=None)
@@ -282,12 +296,25 @@ def show_results_page():
     for i, cat in enumerate(percentages):
         with cols[i]:
             score = percentages[cat]
-            if score <= 30: level, recommendation = 'Alerta Crítico', 'Atenção! Sua estratégia digital nesta área está vulnerável.'
-            elif score <= 70: level, recommendation = 'Ponto de Melhoria', 'Você já deu os primeiros passos, mas existem lacunas que limitam seu crescimento.'
-            else: level, recommendation = 'Estágio Acelerado', 'Sua estratégia está bem direcionada. O desafio agora é a otimização contínua.'
+            
+            # 4 & 5. Novas caixas, cores e textos persuasivos
+            if score <= 35:
+                level = 'Zona de Risco Iminente'
+                recommendation = "Sua estratégia nesta área está criticamente exposta. **Se você não fizer nada**, a perda de clientes e oportunidades é uma questão de tempo, não de 'se'."
+                box_style = "background-color: #DC2626; color: white; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; min-height: 220px;"
+            elif score <= 70:
+                level = 'Crescimento Estagnado'
+                recommendation = "Você está no campo de batalha, mas com as ferramentas erradas. **Se você não fizer nada**, seus concorrentes mais ágeis vão dominar o mercado enquanto você luta para manter o que já tem."
+                box_style = "background-color: #FBBF24; color: black; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; min-height: 220px;"
+            else: # score > 70
+                level = 'Potencial Inexplorado'
+                recommendation = "Você construiu uma base sólida, mas está deixando dinheiro na mesa. **Se você não fizer nada**, você continuará sendo bom, mas nunca alcançará a dominância de mercado que está ao seu alcance."
+                box_style = "background-color: #16A34A; color: white; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; min-height: 220px;"
+
             st.plotly_chart(create_gauge_chart(score, cat.capitalize()), use_container_width=True)
             st.subheader(level)
-            st.write(recommendation)
+            st.markdown(f'<div style="{box_style}">{recommendation}</div>', unsafe_allow_html=True)
+            
     st.markdown("---")
     st.header("Análise Comparativa")
     chart_data = [{'name': cat.capitalize(), 'percentual': perc} for cat, perc in percentages.items()]
@@ -307,7 +334,9 @@ def show_results_page():
             if submit_button:
                 if name and phone:
                     worksheet = connect_to_gsheets()
-                    log_completion(worksheet, name)
+                    # 6. Passa o telefone para a função de log
+                    log_completion(worksheet, name, phone)
+                    
                     analysis_text = f"*Diagnóstico para {name}*\n\n"
                     analysis_text += "Resumo da sua análise:\n"
                     for cat, perc in percentages.items(): analysis_text += f"*{cat.upper()}:* {perc}%\n"
