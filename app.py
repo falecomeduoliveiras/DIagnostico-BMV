@@ -1,4 +1,4 @@
-# app.py (Versão com Correção da Chave Privada)
+# app.py (Correção Final do TypeError)
 import streamlit as st
 import plotly.graph_objects as go
 import urllib.parse
@@ -13,15 +13,17 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- CONEXÃO COM GOOGLE SHEETS (COM CORREÇÃO DA CHAVE) ---
+# --- CONEXÃO COM GOOGLE SHEETS (COM CORREÇÃO FINAL) ---
 def connect_to_gsheets():
     try:
-        creds_dict = st.secrets["gcp_service_account"]
-        
         # **A CORREÇÃO ESTÁ AQUI**
-        # Garante que a chave privada tenha as quebras de linha corretas
+        # 1. Faz uma cópia do segredo para uma variável que podemos editar.
+        creds_dict = dict(st.secrets["gcp_service_account"])
+        
+        # 2. Garante que a chave privada tenha as quebras de linha corretas na cópia.
         creds_dict['private_key'] = creds_dict['private_key'].replace('\\n', '\n')
         
+        # 3. Usa a cópia corrigida para autenticar.
         sa = gspread.service_account_from_dict(creds_dict)
         sh = sa.open("Relatório de Visitas - Diagnóstico")
         return sh.sheet1
