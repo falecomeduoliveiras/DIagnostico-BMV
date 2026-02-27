@@ -1,4 +1,4 @@
-# app.py (Versão com Ajustes de UX, Design e Captura de Leads)
+# app.py (Versão com Refinamento de Tipografia e Textos)
 import streamlit as st
 import plotly.graph_objects as go
 import urllib.parse
@@ -13,12 +13,32 @@ st.set_page_config(
     layout="centered"
 )
 
-# 3. Injeta CSS customizado para usar a fonte Poppins em todo o app
+# 3. CSS Aprimorado para forçar Poppins em TUDO, incluindo títulos, e ajustar pesos.
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+/* Aplica a fonte Poppins a todos os elementos */
 html, body, [class*="st-"], .st-emotion-cache-10trblm, .st-emotion-cache-1kyxreq {
     font-family: 'Poppins', sans-serif;
+}
+
+/* Títulos principais (h1) - ex: "Diagnóstico de Maturidade Digital" */
+h1 {
+    font-family: 'Poppins', sans-serif !important;
+    font-weight: 700 !important; /* Bold */
+}
+
+/* Subtítulos (h2) - ex: Perguntas do quiz */
+h2 {
+    font-family: 'Poppins', sans-serif !important;
+    font-weight: 600 !important; /* Semi-Bold */
+}
+
+/* Títulos de seção (h3) - ex: "Zona de Risco Iminente" */
+h3 {
+    font-family: 'Poppins', sans-serif !important;
+    font-weight: 600 !important; /* Semi-Bold */
 }
 </style>
 """, unsafe_allow_html=True)
@@ -189,7 +209,6 @@ def log_visit(worksheet):
     if worksheet and not st.session_state.get('visit_logged', False):
         try:
             session_id = st.runtime.scriptrunner.get_script_run_ctx().session_id
-            # Adiciona uma 5ª coluna vazia para o futuro telefone
             new_row = [session_id, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "", "", ""]
             worksheet.append_row(new_row)
             st.session_state.visit_logged = True
@@ -204,16 +223,15 @@ def log_completion(worksheet, user_name, user_phone):
             if cell:
                 worksheet.update_cell(cell.row, 3, user_name)
                 worksheet.update_cell(cell.row, 4, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-                # Salva o telefone na 5ª coluna
                 worksheet.update_cell(cell.row, 5, user_phone)
         except Exception as e:
             print(f"Erro ao registrar preenchimento: {e}")
 
 # --- FUNÇÕES DE GRÁFICOS ---
 def create_gauge_chart(score, title):
-    if score <= 35: color = "#DC2626" # Vermelho mais forte
-    elif score <= 70: color = "#FBBF24" # Amarelo
-    else: color = "#16A34A" # Verde mais escuro
+    if score <= 35: color = "#DC2626"
+    elif score <= 70: color = "#FBBF24"
+    else: color = "#16A34A"
     fig = go.Figure(go.Indicator(
         mode="gauge+number", value=score, title={'text': title, 'font': {'size': 20}},
         number={'suffix': "%", 'font': {'size': 28}},
@@ -234,8 +252,7 @@ def create_radar_chart(data):
     return fig
 
 # --- HEADER ---
-# 1. Adiciona o logo da empresa no topo
-st.image("https://i.imgur.com/gL4g5dC.png", width=200) # URL de um logo genérico "Sua Logo Aqui"
+st.image("https://i.imgur.com/gL4g5dC.png", width=200)
 st.markdown("---")
 
 # --- PÁGINAS DA APLICAÇÃO ---
@@ -259,8 +276,8 @@ def show_quiz_page():
     st.markdown(f"Pergunta {q_index + 1} de {len(questions)}")
     question_data = questions[q_index]
     
-    # 2. Aumenta o tamanho da fonte da pergunta
-    st.markdown(f"<h2 style='font-size: 22px; font-weight: 600;'>{question_data['question']}</h2>", unsafe_allow_html=True)
+    # 1 & 2. Aumenta tamanho da fonte e entrelinha da pergunta
+    st.markdown(f"<h2 style='font-size: 30px; line-height: 1.5;'>{question_data['question']}</h2>", unsafe_allow_html=True)
     
     options = [opt['text'] for opt in question_data['options']]
     with st.form(key=f"quiz_form_{category}_{q_index}"):
@@ -297,18 +314,18 @@ def show_results_page():
         with cols[i]:
             score = percentages[cat]
             
-            # 4 & 5. Novas caixas, cores e textos persuasivos
+            # 4. Textos persuasivos e variados
             if score <= 35:
                 level = 'Zona de Risco Iminente'
-                recommendation = "Sua estratégia nesta área está criticamente exposta. **Se você não fizer nada**, a perda de clientes e oportunidades é uma questão de tempo, não de 'se'."
+                recommendation = "Sua estratégia nesta área está vulnerável. A inércia aqui não é uma opção, pois cada dia sem ação representa uma perda real de clientes para concorrentes mais preparados."
                 box_style = "background-color: #DC2626; color: white; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; min-height: 220px;"
             elif score <= 70:
                 level = 'Crescimento Estagnado'
-                recommendation = "Você está no campo de batalha, mas com as ferramentas erradas. **Se você não fizer nada**, seus concorrentes mais ágeis vão dominar o mercado enquanto você luta para manter o que já tem."
+                recommendation = "Você está no campo de batalha, mas com as ferramentas erradas. Manter o status quo significa permitir que seus concorrentes mais ágeis definam as regras do jogo e capturem a maior parte do mercado."
                 box_style = "background-color: #FBBF24; color: black; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; min-height: 220px;"
             else: # score > 70
                 level = 'Potencial Inexplorado'
-                recommendation = "Você construiu uma base sólida, mas está deixando dinheiro na mesa. **Se você não fizer nada**, você continuará sendo bom, mas nunca alcançará a dominância de mercado que está ao seu alcance."
+                recommendation = "Você construiu uma base sólida, mas está deixando dinheiro na mesa. O desafio agora é transformar essa força em domínio de mercado, otimizando processos para capturar o potencial que outros nem conseguem ver."
                 box_style = "background-color: #16A34A; color: white; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; min-height: 220px;"
 
             st.plotly_chart(create_gauge_chart(score, cat.capitalize()), use_container_width=True)
@@ -334,7 +351,6 @@ def show_results_page():
             if submit_button:
                 if name and phone:
                     worksheet = connect_to_gsheets()
-                    # 6. Passa o telefone para a função de log
                     log_completion(worksheet, name, phone)
                     
                     analysis_text = f"*Diagnóstico para {name}*\n\n"
