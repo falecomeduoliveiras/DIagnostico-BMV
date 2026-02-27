@@ -1,4 +1,4 @@
-# app.py (Versão com Ajustes Finais de Layout e Tipografia)
+# app.py (Versão Final com Logo da Empresa)
 import streamlit as st
 import plotly.graph_objects as go
 import urllib.parse
@@ -41,7 +41,7 @@ h3 {
     font-weight: 600 !important;
 }
 
-/* 2. Aumenta o tamanho e o espaçamento das opções de resposta (radio buttons) */
+/* Aumenta o tamanho e o espaçamento das opções de resposta (radio buttons) */
 div[role="radiogroup"] > label {
     font-size: 20px !important;
     padding-top: 10px !important;
@@ -49,7 +49,7 @@ div[role="radiogroup"] > label {
     line-height: 1.6 !important;
 }
 
-/* 3. Corrige o alinhamento no topo para mobile */
+/* Corrige o alinhamento no topo para mobile */
 div[data-testid="stBlockContainer"] {
     padding-top: 2rem !important;
 }
@@ -266,7 +266,8 @@ def create_radar_chart(data):
     return fig
 
 # --- HEADER ---
-st.image("https://i.imgur.com/gL4g5dC.png", width=200)
+# Substitui a URL do logo pela sua
+st.image("https://i.imgur.com/cHuMNC4.png", width=200)
 st.markdown("---")
 
 # --- PÁGINAS DA APLICAÇÃO ---
@@ -290,7 +291,7 @@ def show_quiz_page():
     st.markdown(f"Pergunta {q_index + 1} de {len(questions)}")
     question_data = questions[q_index]
     
-    # 1. Ajusta tamanho da fonte da pergunta para 35px
+    # Ajusta tamanho da fonte da pergunta para 35px
     st.markdown(f"<h2 style='font-size: 35px; line-height: 1.5;'>{question_data['question']}</h2>", unsafe_allow_html=True)
     
     options = [opt['text'] for opt in question_data['options']]
