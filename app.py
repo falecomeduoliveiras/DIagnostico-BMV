@@ -1,4 +1,4 @@
-# app.py (Versão Final com Logo da Empresa)
+# app.py (Versão Final com Pré-visualização de Link - Open Graph)
 import streamlit as st
 import plotly.graph_objects as go
 import urllib.parse
@@ -6,10 +6,14 @@ import gspread
 from datetime import datetime
 import pandas as pd
 
-# --- CONFIGURAÇÃO DA PÁGINA E ESTILOS GLOBAIS ---
+# --- CONFIGURAÇÃO DA PÁGINA (COM AJUSTES PARA PRÉ-VISUALIZAÇÃO) ---
 st.set_page_config(
-    page_title="Diagnóstico de Maturidade Digital",
-    page_icon="🚀",
+    # Este título aparecerá na pré-visualização do link
+    page_title="Woow Marketing: Faça seu Diagnóstico de Maturidade Digital",
+    
+    # Esta imagem será usada como o ícone da aba E como a thumbnail no WhatsApp
+    page_icon="https://i.imgur.com/cHuMNC4.png",
+    
     layout="centered"
 )
 
@@ -266,7 +270,6 @@ def create_radar_chart(data):
     return fig
 
 # --- HEADER ---
-# Substitui a URL do logo pela sua
 st.image("https://i.imgur.com/cHuMNC4.png", width=200)
 st.markdown("---")
 
@@ -291,7 +294,6 @@ def show_quiz_page():
     st.markdown(f"Pergunta {q_index + 1} de {len(questions)}")
     question_data = questions[q_index]
     
-    # Ajusta tamanho da fonte da pergunta para 35px
     st.markdown(f"<h2 style='font-size: 35px; line-height: 1.5;'>{question_data['question']}</h2>", unsafe_allow_html=True)
     
     options = [opt['text'] for opt in question_data['options']]
