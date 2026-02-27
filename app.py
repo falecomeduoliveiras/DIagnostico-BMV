@@ -1,4 +1,4 @@
-# app.py (Versão Final com Pré-visualização de Link - Open Graph)
+# app.py (Versão Definitiva com Meta Tags para WhatsApp)
 import streamlit as st
 import plotly.graph_objects as go
 import urllib.parse
@@ -6,61 +6,44 @@ import gspread
 from datetime import datetime
 import pandas as pd
 
-# --- CONFIGURAÇÃO DA PÁGINA (COM AJUSTES PARA PRÉ-VISUALIZAÇÃO) ---
+# --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
-    # Este título aparecerá na pré-visualização do link
-    page_title="Woow Marketing: Faça seu Diagnóstico de Maturidade Digital",
-    
-    # Esta imagem será usada como o ícone da aba E como a thumbnail no WhatsApp
+    page_title="Woow Marketing: Faça seu Diagnóstico Digital",
     page_icon="https://i.imgur.com/cHuMNC4.png",
-    
     layout="centered"
 )
 
-# CSS Aprimorado para forçar Poppins, ajustar tamanhos e corrigir layout mobile.
+# --- INJEÇÃO DE META TAGS PARA PRÉ-VISUALIZAÇÃO DE LINK (OPEN GRAPH) ---
+st.markdown("""
+    <meta property="og:title" content="Woow Marketing: Faça seu Diagnóstico Digital">
+    <meta property="og:description" content="Descubra o nível de maturidade digital do seu negócio em Branding, Marketing e Vendas.">
+    <meta property="og:image" content="https://i.imgur.com/cHuMNC4.png">
+    <meta property="og:url" content="https://diagnosticobmvwoow360.streamlit.app/">
+    <meta name="twitter:card" content="summary_large_image">
+""", unsafe_allow_html=True)
+
+
+# --- ESTILOS GLOBAIS (CSS) ---
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
-
-/* Aplica a fonte Poppins a todos os elementos */
 html, body, [class*="st-"], .st-emotion-cache-10trblm, .st-emotion-cache-1kyxreq {
     font-family: 'Poppins', sans-serif;
 }
-
-/* Títulos principais (h1) */
-h1 {
-    font-family: 'Poppins', sans-serif !important;
-    font-weight: 700 !important;
-}
-
-/* Subtítulos (h2) - Perguntas do quiz */
-h2 {
-    font-family: 'Poppins', sans-serif !important;
-    font-weight: 600 !important;
-}
-
-/* Títulos de seção (h3) */
-h3 {
-    font-family: 'Poppins', sans-serif !important;
-    font-weight: 600 !important;
-}
-
-/* Aumenta o tamanho e o espaçamento das opções de resposta (radio buttons) */
+h1 { font-family: 'Poppins', sans-serif !important; font-weight: 700 !important; }
+h2 { font-family: 'Poppins', sans-serif !important; font-weight: 600 !important; }
+h3 { font-family: 'Poppins', sans-serif !important; font-weight: 600 !important; }
 div[role="radiogroup"] > label {
     font-size: 20px !important;
     padding-top: 10px !important;
     padding-bottom: 10px !important;
     line-height: 1.6 !important;
 }
-
-/* Corrige o alinhamento no topo para mobile */
 div[data-testid="stBlockContainer"] {
     padding-top: 2rem !important;
 }
-
 </style>
 """, unsafe_allow_html=True)
-
 
 # --- CONEXÃO COM GOOGLE SHEETS ---
 def connect_to_gsheets():
