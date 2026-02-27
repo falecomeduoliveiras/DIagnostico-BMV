@@ -1,4 +1,4 @@
-# app.py (Versão com Fonte da Pergunta em 55px)
+# app.py (Versão com Ajustes Finais de Layout e Tipografia)
 import streamlit as st
 import plotly.graph_objects as go
 import urllib.parse
@@ -13,7 +13,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# CSS Aprimorado para forçar Poppins em TUDO, incluindo títulos, e ajustar pesos.
+# CSS Aprimorado para forçar Poppins, ajustar tamanhos e corrigir layout mobile.
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
@@ -23,23 +23,37 @@ html, body, [class*="st-"], .st-emotion-cache-10trblm, .st-emotion-cache-1kyxreq
     font-family: 'Poppins', sans-serif;
 }
 
-/* Títulos principais (h1) - ex: "Diagnóstico de Maturidade Digital" */
+/* Títulos principais (h1) */
 h1 {
     font-family: 'Poppins', sans-serif !important;
-    font-weight: 700 !important; /* Bold */
+    font-weight: 700 !important;
 }
 
-/* Subtítulos (h2) - ex: Perguntas do quiz */
+/* Subtítulos (h2) - Perguntas do quiz */
 h2 {
     font-family: 'Poppins', sans-serif !important;
-    font-weight: 600 !important; /* Semi-Bold */
+    font-weight: 600 !important;
 }
 
-/* Títulos de seção (h3) - ex: "Zona de Risco Iminente" */
+/* Títulos de seção (h3) */
 h3 {
     font-family: 'Poppins', sans-serif !important;
-    font-weight: 600 !important; /* Semi-Bold */
+    font-weight: 600 !important;
 }
+
+/* 2. Aumenta o tamanho e o espaçamento das opções de resposta (radio buttons) */
+div[role="radiogroup"] > label {
+    font-size: 20px !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    line-height: 1.6 !important;
+}
+
+/* 3. Corrige o alinhamento no topo para mobile */
+div[data-testid="stBlockContainer"] {
+    padding-top: 2rem !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -276,8 +290,8 @@ def show_quiz_page():
     st.markdown(f"Pergunta {q_index + 1} de {len(questions)}")
     question_data = questions[q_index]
     
-    # Aumenta tamanho da fonte para 55px
-    st.markdown(f"<h2 style='font-size: 55px; line-height: 1.5;'>{question_data['question']}</h2>", unsafe_allow_html=True)
+    # 1. Ajusta tamanho da fonte da pergunta para 35px
+    st.markdown(f"<h2 style='font-size: 35px; line-height: 1.5;'>{question_data['question']}</h2>", unsafe_allow_html=True)
     
     options = [opt['text'] for opt in question_data['options']]
     with st.form(key=f"quiz_form_{category}_{q_index}"):
