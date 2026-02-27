@@ -1,4 +1,4 @@
-# app.py (Versão com Refinamento de Tipografia e Textos)
+# app.py (Versão com Fonte da Pergunta em 55px)
 import streamlit as st
 import plotly.graph_objects as go
 import urllib.parse
@@ -13,7 +13,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# 3. CSS Aprimorado para forçar Poppins em TUDO, incluindo títulos, e ajustar pesos.
+# CSS Aprimorado para forçar Poppins em TUDO, incluindo títulos, e ajustar pesos.
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
@@ -276,8 +276,8 @@ def show_quiz_page():
     st.markdown(f"Pergunta {q_index + 1} de {len(questions)}")
     question_data = questions[q_index]
     
-    # 1 & 2. Aumenta tamanho da fonte e entrelinha da pergunta
-    st.markdown(f"<h2 style='font-size: 30px; line-height: 1.5;'>{question_data['question']}</h2>", unsafe_allow_html=True)
+    # Aumenta tamanho da fonte para 55px
+    st.markdown(f"<h2 style='font-size: 55px; line-height: 1.5;'>{question_data['question']}</h2>", unsafe_allow_html=True)
     
     options = [opt['text'] for opt in question_data['options']]
     with st.form(key=f"quiz_form_{category}_{q_index}"):
@@ -314,7 +314,6 @@ def show_results_page():
         with cols[i]:
             score = percentages[cat]
             
-            # 4. Textos persuasivos e variados
             if score <= 35:
                 level = 'Zona de Risco Iminente'
                 recommendation = "Sua estratégia nesta área está vulnerável. A inércia aqui não é uma opção, pois cada dia sem ação representa uma perda real de clientes para concorrentes mais preparados."
@@ -323,7 +322,7 @@ def show_results_page():
                 level = 'Crescimento Estagnado'
                 recommendation = "Você está no campo de batalha, mas com as ferramentas erradas. Manter o status quo significa permitir que seus concorrentes mais ágeis definam as regras do jogo e capturem a maior parte do mercado."
                 box_style = "background-color: #FBBF24; color: black; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; min-height: 220px;"
-            else: # score > 70
+            else:
                 level = 'Potencial Inexplorado'
                 recommendation = "Você construiu uma base sólida, mas está deixando dinheiro na mesa. O desafio agora é transformar essa força em domínio de mercado, otimizando processos para capturar o potencial que outros nem conseguem ver."
                 box_style = "background-color: #16A34A; color: white; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; min-height: 220px;"
