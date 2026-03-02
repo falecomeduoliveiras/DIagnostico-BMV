@@ -1,4 +1,4 @@
-# app.py (Versão Definitiva com Meta Tags para WhatsApp)
+# app.py (Versão Otimizada: Registro apenas de Leads Reais)
 import streamlit as st
 import plotly.graph_objects as go
 import urllib.parse
@@ -13,7 +13,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- INJEÇÃO DE META TAGS PARA PRÉ-VISUALIZAÇÃO DE LINK (OPEN GRAPH) ---
+# --- INJEÇÃO DE META TAGS PARA PRÉ-VISUALIZAÇÃO DE LINK ---
 st.markdown("""
     <meta property="og:title" content="Woow Marketing: Faça seu Diagnóstico Digital">
     <meta property="og:description" content="Descubra o nível de maturidade digital do seu negócio em Branding, Marketing e Vendas.">
@@ -21,7 +21,6 @@ st.markdown("""
     <meta property="og:url" content="https://diagnosticobmvwoow360.streamlit.app/">
     <meta name="twitter:card" content="summary_large_image">
 """, unsafe_allow_html=True)
-
 
 # --- ESTILOS GLOBAIS (CSS) ---
 st.markdown("""
@@ -64,11 +63,22 @@ def connect_to_gsheets():
         sh = sa.open("Relatório de Visitas - Diagnóstico")
         return sh.sheet1
     except Exception as e:
-        st.error("A conexão com a planilha falhou. Verifique a configuração dos segredos.")
-        st.exception(e)
+        st.error("A conexão com a planilha falhou.")
         return None
 
-# --- DADOS DO DIAGNÓSTICO (sem alterações) ---
+# --- FUNÇÃO PARA SALVAR LEAD (Agora salva tudo de uma vez) ---
+def save_lead_to_sheets(name, phone, scores_text):
+    worksheet = connect_to_gsheets()
+    if worksheet:
+        try:
+            # Prepara a linha com: Data/Hora, Nome, Telefone, Resultados
+            timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+            new_row = [timestamp, name, phone, scores_text]
+            worksheet.append_row(new_row)
+        except Exception as e:
+            print(f"Erro ao salvar lead: {e}")
+
+# --- DADOS DO DIAGNÓSTICO ---
 DIAGNOSTIC_QUESTIONS = {
   "branding": [
     {
@@ -204,29 +214,6 @@ if 'page' not in st.session_state:
     st.session_state.answers = {}
     st.session_state.current_question = 0
     st.session_state.category = 'branding'
-    st.session_state.visit_logged = False
-
-def log_visit(worksheet):
-    if worksheet and not st.session_state.get('visit_logged', False):
-        try:
-            session_id = st.runtime.scriptrunner.get_script_run_ctx().session_id
-            new_row = [session_id, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "", "", ""]
-            worksheet.append_row(new_row)
-            st.session_state.visit_logged = True
-        except Exception as e:
-            print(f"Erro ao registrar visita: {e}")
-
-def log_completion(worksheet, user_name, user_phone):
-    if worksheet:
-        try:
-            session_id = st.runtime.scriptrunner.get_script_run_ctx().session_id
-            cell = worksheet.find(session_id)
-            if cell:
-                worksheet.update_cell(cell.row, 3, user_name)
-                worksheet.update_cell(cell.row, 4, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-                worksheet.update_cell(cell.row, 5, user_phone)
-        except Exception as e:
-            print(f"Erro ao registrar preenchimento: {e}")
 
 # --- FUNÇÕES DE GRÁFICOS ---
 def create_gauge_chart(score, title):
@@ -258,14 +245,11 @@ st.markdown("---")
 
 # --- PÁGINAS DA APLICAÇÃO ---
 def show_welcome_page():
-    worksheet = connect_to_gsheets()
-    if worksheet:
-        log_visit(worksheet)
-        st.title("Diagnóstico de Maturidade Digital")
-        st.markdown("Descubra o nível de maturidade digital do seu negócio em **Branding, Marketing e Vendas**.")
-        if st.button("🚀 Começar Diagnóstico"):
-            st.session_state.page = 'quiz'
-            st.rerun()
+    st.title("Diagnóstico de Maturidade Digital")
+    st.markdown("Descubra o nível de maturidade digital do seu negócio em **Branding, Marketing e Vendas**.")
+    if st.button("🚀 Começar Diagnóstico"):
+        st.session_state.page = 'quiz'
+        st.rerun()
 
 def show_quiz_page():
     category = st.session_state.category
@@ -309,22 +293,19 @@ def show_results_page():
         cat_score = sum(st.session_state.answers.get(f"{cat}-{i}", 0) for i, q in enumerate(questions))
         scores[cat], total_possible[cat] = cat_score, len(questions) * 3
     percentages = {cat: round((scores[cat] / total_possible[cat]) * 100) if total_possible[cat] > 0 else 0 for cat in scores}
+    
     cols = st.columns(3)
     for i, cat in enumerate(percentages):
         with cols[i]:
             score = percentages[cat]
-            
             if score <= 35:
-                level = 'Zona de Risco Iminente'
-                recommendation = "Sua estratégia nesta área está vulnerável. A inércia aqui não é uma opção, pois cada dia sem ação representa uma perda real de clientes para concorrentes mais preparados."
+                level, recommendation = 'Zona de Risco Iminente', "Sua estratégia nesta área está vulnerável. A inércia aqui não é uma opção."
                 box_style = "background-color: #DC2626; color: white; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; min-height: 220px;"
             elif score <= 70:
-                level = 'Crescimento Estagnado'
-                recommendation = "Você está no campo de batalha, mas com as ferramentas erradas. Manter o status quo significa permitir que seus concorrentes mais ágeis definam as regras do jogo e capturem a maior parte do mercado."
+                level, recommendation = 'Crescimento Estagnado', "Você está no campo de batalha, mas com as ferramentas erradas."
                 box_style = "background-color: #FBBF24; color: black; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; min-height: 220px;"
             else:
-                level = 'Potencial Inexplorado'
-                recommendation = "Você construiu uma base sólida, mas está deixando dinheiro na mesa. O desafio agora é transformar essa força em domínio de mercado, otimizando processos para capturar o potencial que outros nem conseguem ver."
+                level, recommendation = 'Potencial Inexplorado', "Você construiu uma base sólida, mas está deixando dinheiro na mesa."
                 box_style = "background-color: #16A34A; color: white; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; min-height: 220px;"
 
             st.plotly_chart(create_gauge_chart(score, cat.capitalize()), use_container_width=True)
@@ -337,30 +318,34 @@ def show_results_page():
     col1, col2 = st.columns(2)
     with col1: st.plotly_chart(create_bar_chart(chart_data), use_container_width=True)
     with col2: st.plotly_chart(create_radar_chart(chart_data), use_container_width=True)
+    
     st.markdown("---")
     if st.button("📲 Salvar Minha Análise no WhatsApp"):
         st.session_state.show_form = True
+    
     if st.session_state.get('show_form', False):
         with st.form("whatsapp_form"):
             st.subheader("Plano de Ação Detalhado")
-            st.write("Para onde posso enviar o resumo da nossa conversa?")
             name = st.text_input("Seu primeiro nome")
             phone = st.text_input("Seu WhatsApp com DDD (ex: 11912345678)")
             submit_button = st.form_submit_button("Abrir e Salvar no WhatsApp")
             if submit_button:
                 if name and phone:
-                    worksheet = connect_to_gsheets()
-                    log_completion(worksheet, name, phone)
+                    # Gera o resumo dos resultados para salvar na planilha
+                    resumo_scores = ", ".join([f"{cat.upper()}: {perc}%" for cat, perc in percentages.items()])
                     
+                    # SALVA NA PLANILHA APENAS AGORA
+                    save_lead_to_sheets(name, phone, resumo_scores)
+                    
+                    # Prepara link do WhatsApp
                     analysis_text = f"*Diagnóstico para {name}*\n\n"
-                    analysis_text += "Resumo da sua análise:\n"
                     for cat, perc in percentages.items(): analysis_text += f"*{cat.upper()}:* {perc}%\n"
-                    analysis_text += "\n*Próximos Passos:*\nPodemos traçar um plano de ação prático. Quando conversamos por 15 minutos?\n\nLembre-se: Seu negócio é a única opção ou apenas mais uma?"
+                    analysis_text += "\n*Próximos Passos:*\nPodemos traçar um plano de ação prático. Quando conversamos?"
                     encoded_text = urllib.parse.quote(analysis_text)
                     clean_phone = ''.join(filter(str.isdigit, phone))
                     whatsapp_url = f"https://wa.me/55{clean_phone}?text={encoded_text}"
-                    link_markdown = f"""<div style="text-align: center; margin-top: 20px;"><p>Perfeito! Clique no link abaixo para salvar sua análise agora mesmo:</p><a href="{whatsapp_url}" target="_blank" style="display: inline-block; padding: 15px 25px; font-size: 18px; color: white; background-color: #25D366; border-radius: 30px; text-decoration: none; font-weight: bold;">📲 CLIQUE AQUI PARA SALVAR</a></div>"""
-                    st.markdown(link_markdown, unsafe_allow_html=True)
+                    
+                    st.markdown(f"""<div style="text-align: center; margin-top: 20px;"><a href="{whatsapp_url}" target="_blank" style="display: inline-block; padding: 15px 25px; font-size: 18px; color: white; background-color: #25D366; border-radius: 30px; text-decoration: none; font-weight: bold;">📲 CLIQUE AQUI PARA SALVAR</a></div>""", unsafe_allow_html=True)
                     st.session_state.show_form = False
                 else:
                     st.error("Por favor, preencha seu nome e WhatsApp.")
